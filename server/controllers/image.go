@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"image"
 	_ "image/png"
 	"math/rand"
 	"net/http"
@@ -12,67 +11,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/hcc429/randomcat/db"
-	"github.com/hcc429/randomcat/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const Tolerance = 0.1
+const Tolerance = 2
 
 var imgCollection *mongo.Collection = db.GetDB().Collection("image")
 var validate = validator.New()
 
-func AddImage(c *gin.Context) {
-	// upload single file
-	file, err := c.FormFile("image")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"form error": err.Error()})
-	}
-	img_file, err := file.Open()
-	defer img_file.Close()
-	img, _, err := image.DecodeConfig(img_file)
 
-	c.SaveUploadedFile(file, "./cdn-path")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	var image models.Image
-	defer cancel()
-
-	//validate the request body
-	if err := c.BindJSON(&image); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	//use the validator library to validate required fields
-	if validationErr := validate.Struct(&image); validationErr != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
-		return
-	}
-
-	newImage := models.image{
-		//////// REPLACE THIS PART ////////
-		URL:         "",
-		W:           img.Width,
-		H:           img.Height,
-		AspectRatio: float64(img.Width) / float64(img.Height),
-		SizeKB:      100,
-		UploadTime:  time.Now(),
-		UploadBy:    "",
-		//////// REPLACE THIS PART ////////
-	}
-
-	result, err := imgCollection.InsertOne(ctx, newImage)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{"success": result}) // result include acknowledged, insertedId
-}
 
 func GetRandImage(c *gin.Context) {
-	width, errW := strconv.Atoi(c.Query("width"))
-	height, errH := strconv.Atoi(c.Query("height"))
+	width, errW := strconv.Atoi(c.Query("w"))
+	height, errH := strconv.Atoi(c.Query("h"))
 	if errW != nil || errH != nil {
 		c.JSON(400, gin.H{"error": "invalid query: width, height"})
 		return
@@ -81,15 +33,18 @@ func GetRandImage(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
+	
 	filter := bson.D{
-		"$and", bson.A{
-			bson.D{"aspect_ratio", bson.D{"$gte", aspect_ratio - Tolerance}},
-			bson.D{"aspect_ratio", bson.D{"$lte", aspect_ratio + Tolerance}},
+		{Key: "$and", Value:bson.A{
+			bson.D{{Key: "aspect_ratio", Value:bson.D{{Key:"$gte",Value: aspect_ratio - Tolerance}}}},
+			bson.D{{Key: "aspect_ratio", Value:bson.D{{Key:"$lte",Value: aspect_ratio + Tolerance}}}},
+			},
 		},
 	}
-	opts := mongo.options.Find().SetProjection(bson.D{"image_url", 1})
-	cur, err := imgCollection.Find(ctx, filter, opts)
+
+	
+
+	cur, err := imgCollection.Find(ctx, filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -105,7 +60,8 @@ func GetRandImage(c *gin.Context) {
 	rand.Seed(time.Now().Unix())
 	selected := results[rand.Intn(len(results))]
 
-	c.Redirect(http.StatusMovedPermanently, selected.URL)
+	
+	c.Redirect(http.StatusTemporaryRedirect, selected.URL)
 }
 
 func GetImageById(c *gin.Context) {
