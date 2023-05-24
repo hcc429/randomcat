@@ -19,7 +19,6 @@ var (
 )
 
 func init(){
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3 * time.Second)
 	defer cancel()
 	var err error

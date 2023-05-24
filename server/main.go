@@ -2,12 +2,13 @@ package main
 
 import (
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/hcc429/randomcat/controllers"
+	"github.com/hcc429/randomcat/router"
 	"github.com/gin-gonic/gin"
 )
 
 func main(){
 	r := gin.Default()
-	r.GET("/", controllers.GetRandImage)
+	router.AddImageRoute(r)
+	router.AddMetricRoute(r)
 	r.Run()
 }
