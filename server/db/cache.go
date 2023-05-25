@@ -13,8 +13,8 @@ import (
 
 var (
 	RedisClient *redis.Client
-	redis_Addr  = os.Getenv("Redis_Addr")
-	expireTime  = 5
+	redis_Addr  = os.Getenv("REDIS_ADDR")
+	useCache = os.Getenv("USE_REDIS")
 )
 
 func init() {
@@ -22,7 +22,7 @@ func init() {
 	fmt.Println("shit")
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	RedisClient := redis.NewClient(&redis.Options{
+	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     redis_Addr, // Update with the Redis server address
 		Password: "",         // No password set
 		DB:       0,          // Use the default DB
@@ -35,6 +35,9 @@ func init() {
 }
 
 func GetValue(s string) (string, error) {
+	if(useCache!="TRUE"){
+		return "No Cache", nil
+	}
 	ctx := context.Background()
 	val, err := RedisClient.Get(ctx, s).Result() // => GET key2
 	if err == redis.Nil {
@@ -47,7 +50,10 @@ func GetValue(s string) (string, error) {
 	}
 }
 
-func AddKeyValuePair(key string, val string) {
+func AddKeyValuePair(key string, val string, expireTime int) {
+	if(useCache!="TRUE"){
+		return
+	}
 	ctx := context.Background()
 	err := RedisClient.Set(ctx, key, val, time.Duration(expireTime)*time.Second).Err()
 	if err != nil {

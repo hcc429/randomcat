@@ -10,5 +10,5 @@ func main(){
 	r := gin.Default()
 	router.AddImageRoute(r)
 	router.AddMetricRoute(r)
-	r.Run()
+	r.Run("0.0.0.0:8080")
 }
