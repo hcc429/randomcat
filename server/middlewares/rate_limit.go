@@ -11,10 +11,10 @@ import (
 )
 
 var( 
-	USER_EXPIRE_TIME = 5
-	USER_RATE_LIMIT = 10
+	RATE_LIMIT_TIME = 10
+	RATE_LIMIT_COUNT = 10
 )
-const TIME_BUCKET = 5
+
 
 
 func RateLimit(c *gin.Context) {
@@ -28,19 +28,19 @@ func RateLimit(c *gin.Context) {
 		// Redis has no User record
 		// Add user to database
 		log.Println("firsttime", userKey, 1)
-		db.AddKeyValuePair(userKey, "1", USER_EXPIRE_TIME)
+		db.AddKeyValuePair(userKey, "1", RATE_LIMIT_TIME)
 	} else {
 		// Read
 		visitCount, err := strconv.Atoi(count)
 		if err != nil {
 			log.Println("Cast to Int failed")
 		} else {
-			if visitCount > USER_RATE_LIMIT {
+			if visitCount > RATE_LIMIT_COUNT {
 				c.Abort()
 				return
 			} else {
 				log.Println(userKey, visitCount+1)
-				db.AddKeyValuePair(userKey, strconv.Itoa(visitCount+1), USER_EXPIRE_TIME)
+				db.AddKeyValuePair(userKey, strconv.Itoa(visitCount+1), RATE_LIMIT_TIME)
 			}
 		}
 	}
@@ -51,7 +51,7 @@ func RateLimit(c *gin.Context) {
 }
 
 func getUserKey(IP string) string{
-	bucket := time.Now().Unix() / TIME_BUCKET
+	bucket := time.Now().Unix() / int64(RATE_LIMIT_TIME)
 	IP = IP + "_" + strconv.FormatInt(bucket, 10)
 	return IP
 }
