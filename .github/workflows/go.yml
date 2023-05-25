@@ -13,7 +13,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: navigate directory into server
-        working-directory: randomcat/server
-        run: |
-            echo "hello world"
+       - name: List contents of working directory
+         run: ls -R
+
+      #- name: navigate directory into server
+      #  working-directory: randomcat/server
+      #  run: echo "hello world"
