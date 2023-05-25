@@ -17,8 +17,6 @@ var (
 	db_name = os.Getenv("DATABASE_NAME")
 )
 
-func init(){
-	ctx, cancel := context.WithTimeout(context.Background(), 3 * time.Second)
 func init() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
