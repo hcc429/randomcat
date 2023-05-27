@@ -3,8 +3,6 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -13,45 +11,38 @@ import (
 
 var (
 	RedisClient *redis.Client
-	redis_Addr  = os.Getenv("REDIS_ADDR")
-	useCache = os.Getenv("USE_REDIS")
+	redisAddr  = os.Getenv("REDIS_ADDR")
+	useCache = os.Getenv("USE_CACHE") != "FALSE"
 )
 
 func init() {
-	//Redis
-	fmt.Println("shit")
+	if !useCache{
+		return
+	} 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     redis_Addr, // Update with the Redis server address
+		Addr:     redisAddr, // Update with the Redis server address
 		Password: "",         // No password set
 		DB:       0,          // Use the default DB
 	})
-	pong, err := RedisClient.Ping(ctx).Result()
+	_, err := RedisClient.Ping(ctx).Result()
 	if err != nil {
-		log.Println(pong, err)
-		panic("sad")
+		panic(err)
 	}
 }
 
-func GetValue(s string) (string, error) {
-	if(useCache!="TRUE"){
-		return "No Cache", nil
+func GetValue(key string) (string, error) {
+	if !useCache{
+		return "", errors.New("Cache is disable")
 	}
 	ctx := context.Background()
-	val, err := RedisClient.Get(ctx, s).Result() // => GET key2
-	if err == redis.Nil {
-		//log.Println("key2 does not exist")
-		return "", errors.New("Redis no data")
-	} else if err != nil {
-		panic(err)
-	} else {
-		return val, nil
-	}
+	val, err := RedisClient.Get(ctx, key).Result()
+	return val, err
 }
 
-func AddKeyValuePair(key string, val string, expireTime int) {
-	if(useCache!="TRUE"){
+func AddKeyValuePair(key string, val interface{}, expireTime int) {
+	if !useCache{
 		return
 	}
 	ctx := context.Background()

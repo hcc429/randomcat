@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	_ "image/png"
 	"math"
 	"math/rand"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -16,9 +16,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const Tolerance = 2
-const binWidth = 2.0
-const URLExpireTime = 5
+const (
+	Tolerance = 2
+	binWidth = 0.25
+	URLExpireTime = 5
+)
 
 
 var imgCollection *mongo.Collection = db.GetDB().Collection("image")
@@ -37,10 +39,7 @@ func GetRandImage(c *gin.Context) {
 	url, err := db.GetValue(binNum)
 
 	if err != nil{
-		// Query db
-		db.GetDB()
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+		fmt.Println("cache miss")
 		filter := bson.D{
 			{Key: "$and", Value: bson.A{
 				bson.D{{Key: "aspect_ratio", Value: bson.D{{Key: "$gte", Value: aspect_ratio - Tolerance}}}},
@@ -49,7 +48,8 @@ func GetRandImage(c *gin.Context) {
 			},
 		}
 
-		cur, err := imgCollection.Find(ctx, filter)
+		cur, err := db.FindImagesByFilter(filter)
+		
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -57,30 +57,18 @@ func GetRandImage(c *gin.Context) {
 		var results []struct {
 			URL string
 		}
+
+		ctx := context.Background()
 		if err = cur.All(ctx, &results); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		rand.Seed(time.Now().Unix())
 		selected := results[rand.Intn(len(results))]
-
-		c.Redirect(http.StatusTemporaryRedirect, selected.URL)
-
 		db.AddKeyValuePair(binNum, selected.URL, URLExpireTime)
-
-	} else {
-		// Return URL From redis
-		c.Redirect(http.StatusTemporaryRedirect, url)
-		return
+		url = selected.URL
 	}
+	c.Redirect(http.StatusTemporaryRedirect, url)
 
-}
 
-func GetImageById(c *gin.Context) {
-	//
-}
-
-func DeleteImageById(c *gin.Context) {
-	//
 }

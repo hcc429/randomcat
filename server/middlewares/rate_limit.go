@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"log"
 	"strconv"
 	"time"
@@ -10,9 +11,9 @@ import (
 	"github.com/hcc429/randomcat/metric"
 )
 
-var( 
-	RATE_LIMIT_TIME = 10
-	RATE_LIMIT_COUNT = 10
+const( 
+	RATE_LIMIT_INTERVAL = 10
+	RATE_LIMIT_QUOTA = 10
 )
 
 
@@ -21,28 +22,26 @@ func RateLimit(c *gin.Context) {
 
 	metric.IncRequests()
 	userKey := getUserKey(c.ClientIP())
-	// Check if user in cache
 	count, err := db.GetValue(userKey)
-	log.Println(count, err)
 	if err != nil {
 		// Redis has no User record
 		// Add user to database
-		log.Println("firsttime", userKey, 1)
-		db.AddKeyValuePair(userKey, "1", RATE_LIMIT_TIME)
+		db.AddKeyValuePair(userKey, "1", RATE_LIMIT_INTERVAL)
 	} else {
 		// Read
 		visitCount, err := strconv.Atoi(count)
 		if err != nil {
 			log.Println("Cast to Int failed")
 		} else {
-			if visitCount > RATE_LIMIT_COUNT {
-				c.Abort()
+			visitCount++
+			if visitCount > RATE_LIMIT_QUOTA {
+				c.AbortWithError(429, errors.New("Too Many Request!"))
 				return
 			} else {
-				log.Println(userKey, visitCount+1)
-				db.AddKeyValuePair(userKey, strconv.Itoa(visitCount+1), RATE_LIMIT_TIME)
+				db.AddKeyValuePair(userKey, visitCount, RATE_LIMIT_INTERVAL)
 			}
 		}
+		log.Println(userKey, visitCount)
 	}
 	c.Next() // forward to controller
 	if c.Writer.Status() < 400 {
@@ -51,7 +50,7 @@ func RateLimit(c *gin.Context) {
 }
 
 func getUserKey(IP string) string{
-	bucket := time.Now().Unix() / int64(RATE_LIMIT_TIME)
+	bucket := time.Now().Unix() / int64(RATE_LIMIT_INTERVAL)
 	IP = IP + "_" + strconv.FormatInt(bucket, 10)
 	return IP
 }

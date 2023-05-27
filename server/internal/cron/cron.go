@@ -1,8 +1,8 @@
 package main 
 
 import (
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/hcc429/randomcat/internal/cloudinary"
-	"github.com/hcc429/randomcat/models"
 	"github.com/hcc429/randomcat/db"
 )
 
@@ -13,9 +13,6 @@ func main(){
 		panic("error when getting cloudinary info" + err.Error())
 	}
 	
-	images := make([]models.Image, len(resp.Assets))
-	for i, v := range resp.Assets{
-		images[i] = *models.NewImage(v.URL, v.Width, v.Height)
-	}
-	db.InsertImages(images)
+	image_table := db.SyncImages(resp.Assets)
+	db.ClearUnusedImages(*image_table)
 }
