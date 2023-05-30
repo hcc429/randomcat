@@ -13,6 +13,6 @@ create_redis:
 remove_redis:
 	@docker stop redis 2> /dev/null || true
 
-clean: remove_db
+clean: remove_db remove_redis
 
 .PHONY: create_db remove_db clean

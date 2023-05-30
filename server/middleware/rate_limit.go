@@ -11,12 +11,10 @@ import (
 	"github.com/hcc429/randomcat/metric"
 )
 
-const( 
+const (
 	RATE_LIMIT_INTERVAL = 10
-	RATE_LIMIT_QUOTA = 10
+	RATE_LIMIT_QUOTA    = 10
 )
-
-
 
 func RateLimit(c *gin.Context) {
 
@@ -49,7 +47,7 @@ func RateLimit(c *gin.Context) {
 	}
 }
 
-func getUserKey(IP string) string{
+func getUserKey(IP string) string {
 	bucket := time.Now().Unix() / int64(RATE_LIMIT_INTERVAL)
 	IP = IP + "_" + strconv.FormatInt(bucket, 10)
 	return IP
