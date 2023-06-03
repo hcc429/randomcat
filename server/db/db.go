@@ -24,14 +24,13 @@ func init() {
 	var err error
 	client, err = mongo.Connect(ctx, options.Client().ApplyURI(db_url))
 	if err != nil {
-		log.Fatal("Error when connect to mongodb\n")
-		panic(err)
+		panic("Error when connect to mongodb\n" + err.Error())
 	}
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		log.Fatal("Couldn't connect to database!\n", err)
 	} else {
-		log.Println("Connected!")
+		log.Println("Connected to MongoDB!")
 	}
 }
 

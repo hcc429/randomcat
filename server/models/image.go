@@ -1,12 +1,5 @@
 package models
 
-import "math"
-
-// import (
-// 	"fmt"
-// 	"strconv"
-// )
-
 
 type Image struct {
 	URL         string    `bson:"url"`
@@ -14,18 +7,19 @@ type Image struct {
 	Height      int       `bson:"height"`
 	AspectRatio float64   `bson:"aspect_ratio"`
 	Likes		int		  `bson:"likes"`
+	PublicID    string    `bson:"public_id"`
 }
 
 
-func NewImage(url string, width, height int)*Image{
+func NewImage(url string, width, height int, public_id string)*Image{
 	aspect_ratio := float64(width) / float64(height)
-	aspect_ratio = math.Round(aspect_ratio * 100) / 100
 	return &Image{
 		URL: url,
 		Width: width,
 		Height: height,
 		AspectRatio: aspect_ratio,
 		Likes: 0,
+		PublicID: public_id,
 	}
 
 }

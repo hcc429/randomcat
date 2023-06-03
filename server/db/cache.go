@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -29,7 +30,10 @@ func init() {
 	_, err := RedisClient.Ping(ctx).Result()
 	if err != nil {
 		panic(err)
+	} else {
+		log.Println("Connected to Redis!")
 	}
+	
 }
 
 func GetValue(key string) (string, error) {

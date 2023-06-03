@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-
 	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/hcc429/randomcat/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
 
 func removeImageById(id primitive.ObjectID) {
 	imgCollection := GetDB().Collection("image")
@@ -36,12 +36,12 @@ func FindImagesByFilterAndOption(filter interface{}, opts *options.FindOptions) 
 	return cursor, err
 }
 
-func FindImageByUrl(url string) error {
+func UrlExist(url string) bool {
 	imgCollection := GetDB().Collection("image")
 	ctx := context.Background()
 	var result models.Image
 	err := imgCollection.FindOne(ctx, bson.D{{Key: "url", Value: url}}).Decode(&result)
-	return err
+	return err != mongo.ErrNoDocuments
 }
 
 func UpdateImage(filter interface{}, update interface{}, opts *options.FindOneAndUpdateOptions) error {
@@ -57,15 +57,15 @@ func SyncImages(images []api.BriefAssetResult) *map[string]bool {
 	imgCollection := GetDB().Collection("image")
 
 	for _, image := range images {
-		image_table[image.URL] = true
-		if err := FindImageByUrl(image.URL); err == mongo.ErrNoDocuments {
+		image_table[image.SecureURL] = true
+		if !UrlExist(image.SecureURL) {
 			ctx := context.Background()
-			img := models.NewImage(image.URL, image.Width, image.Height)
+			img := models.NewImage(image.SecureURL, image.Width, image.Height, image.PublicID)
 			_, err := imgCollection.InsertOne(ctx, img)
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println("Insert New Image to Database, url: ", image.URL)
+			fmt.Println("Insert New Image to Database, url: ", image.SecureURL)
 		}
 	}
 	return &image_table

@@ -10,8 +10,12 @@ func AddImageRoute(r *gin.Engine) {
 	image := r.Group("/image")
 	image.Use(middleware.RateLimit)
 	{
-		image.GET("/", controllers.GetRandImage)
-		image.GET("/gallery", controllers.GetImagePage)
-		image.POST("/", controllers.LikeImage)
+		image.GET("", controllers.GetRandImage)
+	}
+	images := r.Group("/images")
+	images.Use(middleware.RateLimit)
+	{
+		images.GET("", controllers.GetImages)
+		images.POST("/like", controllers.LikeImage)
 	}
 }
