@@ -1,0 +1,22 @@
+name: data-sync
+on:
+  schedule: 
+    - cron: "*/15 * * * *"
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    env:
+      USE_CACHE: FALSE
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      
+      - name: setup go
+        uses: actions/setup-go@v4
+
+      - name: cd
+        run: cd server/internal/cron
+    
+      - name: cron job
+        run: go run cron.go
