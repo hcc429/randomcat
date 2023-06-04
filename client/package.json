@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/react-icons": "^3.0.0",
     "axios": "^1.4.0",
     "gsap": "^3.11.5",
     "prop-types": "^15.8.1",

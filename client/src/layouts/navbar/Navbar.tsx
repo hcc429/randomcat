@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { NavItem as Item } from "../interfaces/navbar";
 import NavItem from "./NavItem";
-import Logo from "./Logo";
+import Logo from "../../components/Logo";
 import { AiOutlineClose, AiOutlineMenu } from "react-icons/ai";
 
 export default function Navbar() {
@@ -10,7 +9,7 @@ export default function Navbar() {
   const navbarToggler = () => {
     setOpen((isOpen) => !isOpen);
   };
-  const navItems: Item[] = [
+  const navItems = [
     {
       to: "/",
       text: "Home",
@@ -31,7 +30,11 @@ export default function Navbar() {
       <div className={"rwd-navbar " + (isOpen ? "active" : "")}>
         {navItems.length &&
           navItems.map((navItem, id) => (
-            <NavItem {...navItem} onclick={(isOpen) => setOpen(!isOpen)} key={id}/>
+            <NavItem
+              {...navItem}
+              onclick={(isOpen) => setOpen(!isOpen)}
+              key={id}
+            />
           ))}
       </div>
       <span className="lg:hidden ml-auto" onClick={navbarToggler}>

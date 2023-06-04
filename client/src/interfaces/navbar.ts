@@ -1,7 +1,5 @@
-
-
-export interface NavItem{
-    to: string
-    text: string
-    onclick?: (...args: any[])=>any
+export default interface NavItemProps {
+  to: string;
+  text: string;
+  onclick?: (...args: any[]) => any;
 }

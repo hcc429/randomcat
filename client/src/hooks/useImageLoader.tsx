@@ -1,16 +1,17 @@
 import { useState } from "react";
 import ImageService from "../services/image.service";
-const loadImage = (src: string) => {
+import GalleryItemProps from "../interfaces/GalleryItem";
+const loadImage = (src: string, likes: number) => {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.src = src;
-    img.onload = () => resolve(img);
+    img.onload = () => resolve({img, likes});
     img.onerror = reject;
   });
 };
 
 const useImageLoader = (limit: number) => {
-  const [images, setImages] = useState<HTMLImageElement[]>([]);
+  const [images, setImages] = useState<GalleryItemProps[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isEnd, setEnd] = useState(false);
@@ -20,8 +21,8 @@ const useImageLoader = (limit: number) => {
       let nextImages = await ImageService.getPage(currentPage, limit);
       if (nextImages && nextImages.length) {
         let newImages = (await Promise.all(
-          nextImages.map((img) => loadImage(img.URL))
-        )) as HTMLImageElement[];
+          nextImages.map((img) => loadImage(img.URL, img.Likes))
+        )) as GalleryItemProps[];
         setImages((i) => [...i, ...newImages]);
         setCurrentPage((prevPage) => prevPage + 1);
       } else if (nextImages.length == 0) {

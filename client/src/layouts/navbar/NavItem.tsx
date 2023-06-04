@@ -1,17 +1,17 @@
 import { NavLink } from "react-router-dom";
-import { NavItem } from "../interfaces/navbar";
+import NavItemProps from "../../interfaces/Navbar";
 
-export default function NavItem(props: NavItem) {
+export default function NavItem({ to, onclick, text }: NavItemProps) {
   return (
-    <div className="nav-item" onClick={props.onclick ?? undefined}>
+    <div className="nav-item" onClick={onclick ?? undefined}>
       <NavLink
-        to={props.to}
+        to={to}
         className={({ isActive }) =>
           (isActive ? "bg-amber-100" : "hover:bg-amber-50") +
           " text-2xl transition duration-300 px-4 py-3 rounded-md hover:shadow-sm shadow-amber-200"
         }
       >
-        {props.text}
+        {text}
       </NavLink>
     </div>
   );
