@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/hcc429/randomcat/controllers/dto"
 	"github.com/hcc429/randomcat/db"
 	"github.com/hcc429/randomcat/internal/cloudinary"
 	"github.com/hcc429/randomcat/models"
@@ -93,13 +94,13 @@ func GetImages(c *gin.Context) {
 	sortBy := bson.D{}
 	switch sortMethod {
 	case "most_like":
-		sortBy = bson.D{{"likes", -1}}
+		sortBy = bson.D{{Key: "likes", Value:-1}}
 	case "newest":
-		sortBy = bson.D{{"_id", -1}}
+		sortBy = bson.D{{Key: "_id", Value: -1}}
 	case "oldest":
-		sortBy = bson.D{{"_id", 1}}
+		sortBy = bson.D{{Key: "_id", Value: 1}}
 	default:
-		sortBy = bson.D{{"likes", -1}, {"_id", -1}}
+		sortBy = bson.D{{Key: "likes", Value: -1}, {Key: "_id", Value:  -1}}
 	}
 	opts := options.Find().SetSort(sortBy).SetLimit(int64(limit)).SetSkip(skip)
 
@@ -122,17 +123,24 @@ func GetImages(c *gin.Context) {
 }
 
 func LikeImage(c *gin.Context) {
-	imageUrl := c.PostForm("URL")
-	filter := bson.D{{"url", imageUrl}}
-	update := bson.D{{"$inc", bson.D{{"likes", 1}}}}
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-
-	err := db.UpdateImage(filter, update, opts)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	likes := new(dto.Likes)
+	if err := c.ShouldBindJSON(&likes); err != nil{
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+
+	writeModels := make([]mongo.WriteModel, 0)
+	for _, like := range likes.Likes{
+		writeModels = append(writeModels, mongo.NewUpdateOneModel().SetFilter(
+			bson.D{{Key: "url", Value: like.URL}}).SetUpdate(
+				bson.D{{Key: "$inc", Value:  bson.D{{Key: "likes", Value: like.Amount}}}}))
+	}
+
+	opts := options.BulkWrite().SetOrdered(true)
+	results, err := imgCollection.BulkWrite(context.Background(), writeModels, opts)
+	if err != nil{
+		fmt.Println(err)
+	}
+	c.JSON(http.StatusOK, gin.H{"status": results})
 	return
 }
