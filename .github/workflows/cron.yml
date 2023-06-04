@@ -9,14 +9,16 @@ jobs:
     env:
       USE_CACHE: FALSE
     steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      
       - name: setup go
         uses: actions/setup-go@v4
 
-      - name: cd
-        run: cd server/internal/cron
-    
+      - name: checkout
+        uses: actions/checkout@v3
+
       - name: cron job
+        working-directory: server/internal/cron/
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
         run: go run cron.go
