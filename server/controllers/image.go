@@ -41,7 +41,12 @@ func GetRandImage(c *gin.Context) {
 	var filter interface{}
 	var err error
 	var publicID string
+	var results []struct {
+		PublicID string `bson:"public_id"`
+	}
+
 	if errW != nil || errH != nil {
+		
 		publicID, err = db.GetValue("Rand")
 		if err != nil {
 			//c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query: width, height"})
@@ -51,25 +56,22 @@ func GetRandImage(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
-			var results []struct {
-				PublicID string `bson:"public_id"`
-			}
 			ctx := context.Background()
 			if err = cur.All(ctx, &results); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 			selected := results[rand.Intn(len(results))]
-			//db.AddKeyValuePair(0, selected.PublicID, URLExpireTime)
+
 			db.AddKeyValuePair("Rand", selected.PublicID, URLExpireTime)
 			publicID = selected.PublicID
 		}
 	} else {
-
 		aspect_ratio := float64(width) / float64(height)
 		// Check if redis has cache
 		interval := strconv.Itoa(int(math.Floor(aspect_ratio / IntervalSize)))
 		publicID, err = db.GetValue(interval)
+
 		if err != nil {
 			fmt.Println("cache miss")
 			filter = bson.D{
@@ -86,21 +88,17 @@ func GetRandImage(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
-
-			var results []struct {
-				PublicID string `bson:"public_id"`
-			}
 			ctx := context.Background()
 			if err = cur.All(ctx, &results); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
-
 			selected := results[rand.Intn(len(results))]
 			db.AddKeyValuePair(interval, selected.PublicID, URLExpireTime)
 			publicID = selected.PublicID
 		}
 	}
+
 	// Resize the Image to required size
 	t := cloudinary.Transform{
 		Width:  height,
