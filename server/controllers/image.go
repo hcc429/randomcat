@@ -103,7 +103,7 @@ func GetRandImage(c *gin.Context) {
 	t := cloudinary.Transform{
 		Width:  height,
 		Height: width,
-		Blur:   5,
+		Blur:   0,
 	}
 	//fmt.Println(publicID)
 	URL, err := cloudinary.GetTransformUrl(cld, publicID, &t)
