@@ -13,13 +13,13 @@ import (
 var (
 	RedisClient *redis.Client
 	redisAddr  = os.Getenv("REDIS_ADDR")
-	useCache = os.Getenv("USE_CACHE") != "FALSE"
+	useCache = os.Getenv("USE_CACHE") == "TRUE"
 )
 
 func init() {
 	if !useCache{
 		return
-	} 
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	RedisClient = redis.NewClient(&redis.Options{
