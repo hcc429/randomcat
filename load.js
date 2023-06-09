@@ -1,43 +1,29 @@
 import http from "k6/http";
 import { sleep } from "k6";
+import { check } from 'k6';
+import { Rate, Trend } from "k6/metrics";
 //docker run --rm -i grafana/k6 run - <load.js
 
+// Define custom metrics
+//const failedRequests = new Rate("failed_requests");
+//const requestsPerSecond = new Trend("requests_per_second");
 
 export const options = {
   stages: [
-    { duration: '10s', target: 1000 },
-    { duration: '30s', target: 1000 },
-    // { duration: '10s', target: 2000 },
-    // { duration: '30s', target: 2000 },
-    // { duration: '10s', target: 3000 },
-    // { duration: '30s', target: 3000 },
-    // { duration: '10s', target: 4000 },
-    // { duration: '30s', target: 4000 },
-    // { duration: '10s', target: 5000 },
-    // { duration: '30s', target: 5000 },
-    // { duration: '10s', target: 6000 },
-    // { duration: '30s', target: 6000 },
-    // { duration: '10s', target: 7000 },
-    // { duration: '30s', target: 7000 },
-    // { duration: '10s', target: 8000 },
-    // { duration: '30s', target: 8000 },
-    // { duration: '10s', target: 9000 },
-    // { duration: '30s', target: 9000 },
-
+    { duration: '10s', target: 200 },
+    { duration: '100s', target: 200 },
+    { duration: '10s', target: 100}
   ],
 };
+// export const options = {
+//   vus: 2000,
+//   duration: '10s',
+//   rps: 120
+// };
 export const sameImage = false
 export default function () {
-    //const url = "https://randomcat.io/api/image/?w=100&h=170";
-    const url = "https://randomcat.io/api/images?p=1&limit=5&sort=newest";
-  // if(sameImage){
-  //   const ratio = Math.random()+1;
-  //   const h = Math.floor(100*ratio); 
-  //   url = `https://randomcat.io/api/image/?w=100&h=${h}`;
-  // }
-  http.get(url);
-  sleep(1);
+  const url = "https://randomcat.io/api/image?w=100&h=170";
+  const res = http.get(url);
+  check(res, { 'status was 200': (r) => r.status == 200 });
   //sleep(1);
-  // Print the response time for each request
-  //console.log(`Response time for w=${w} and h=${h}: ${responseTime} ms`);
 }
