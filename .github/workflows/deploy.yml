@@ -54,7 +54,7 @@ jobs:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GKE_REGION }}
       
-      - name: rolling update
+      - name: rollout update
         run: |
           kubectl rollout restart deploy server-deployment
           kubectl rollout restart deploy client-deployment
