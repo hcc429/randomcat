@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	Tolerance     = 2
+	Tolerance     = 0.2
 	IntervalSize  = 0.25
 	URLExpireTime = 5
 )
@@ -93,6 +93,7 @@ func GetRandImage(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
+			fmt.Print(len(results))
 			selected := results[rand.Intn(len(results))]
 			db.AddKeyValuePair(interval, selected.PublicID, URLExpireTime)
 			publicID = selected.PublicID
@@ -101,8 +102,8 @@ func GetRandImage(c *gin.Context) {
 
 	// Resize the Image to required size
 	t := cloudinary.Transform{
-		Width:  height,
-		Height: width,
+		Width:  width,
+		Height: height,
 		Blur:   0,
 	}
 	//fmt.Println(publicID)
@@ -156,7 +157,7 @@ func GetImages(c *gin.Context) {
 	return
 }
 
-func LikeImage(c *gin.Context) {
+func LikeImages(c *gin.Context) {
 	likes := new(dto.Likes)
 	if err := c.ShouldBindJSON(&likes); err != nil{
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

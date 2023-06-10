@@ -18,10 +18,6 @@ export default function Navbar() {
       to: "/gallery",
       text: "Gallery",
     },
-    {
-      to: "/support",
-      text: "Support Us",
-    },
   ];
 
   return (

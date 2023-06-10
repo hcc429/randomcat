@@ -1,4 +1,4 @@
-import ImageProps from "../interfaces/Image";
+import ImageProps from "../interfaces/image";
 import Like from "../interfaces/Like";
 import apiClient from "./api.client";
 

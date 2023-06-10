@@ -6,8 +6,6 @@ on:
 jobs:
   cron:
     runs-on: ubuntu-latest
-    env:
-      USE_CACHE: FALSE
     steps:
       - name: setup go
         uses: actions/setup-go@v4

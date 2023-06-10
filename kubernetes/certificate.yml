@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: randomcat.io
+spec:
+  secretName: randomcat.io
+  dnsNames:
+    - randomcat.io
+  commonName: randomcat.io
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import NavItemProps from "../../interfaces/Navbar";
+import NavItemProps from "../../interfaces/navbar";
 
 export default function NavItem({ to, onclick, text }: NavItemProps) {
   return (
