@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: client-pod
-        image: hcc0429/randomcat-client
+        image: israndomcat/randomcat-client
         ports:
         - containerPort: 3000
         imagePullPolicy: Always
