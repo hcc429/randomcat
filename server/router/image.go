@@ -16,6 +16,6 @@ func AddImageRoute(r *gin.Engine) {
 	images.Use(middleware.RateLimit)
 	{
 		images.GET("", controllers.GetImages)
-		images.POST("/like", controllers.LikeImage)
+		images.POST("/like", controllers.LikeImages)
 	}
 }

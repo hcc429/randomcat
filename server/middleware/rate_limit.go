@@ -13,7 +13,7 @@ import (
 
 const (
 	RATE_LIMIT_INTERVAL = 10
-	RATE_LIMIT_QUOTA    = 10
+	RATE_LIMIT_QUOTA    = 5
 )
 
 func RateLimit(c *gin.Context) {

@@ -23,63 +23,98 @@ import (
 )
 
 const (
-	Tolerance     = 2
-	binWidth      = 0.25
+	Tolerance     = 0.2
+	IntervalSize  = 0.25
 	URLExpireTime = 5
 )
 
 var (
 	imgCollection *mongo.Collection = db.GetDB().Collection("image")
-	validate = validator.New()
-	cld, _ = cloudinary.GetCredentials()
+	validate                        = validator.New()
+	cld, _                          = cloudinary.GetCredentials()
 )
 
 func GetRandImage(c *gin.Context) {
 	width, errW := strconv.Atoi(c.Query("w"))
 	height, errH := strconv.Atoi(c.Query("h"))
+
+	var filter interface{}
+	var err error
+	var publicID string
+	var results []struct {
+		PublicID string `bson:"public_id"`
+	}
+
 	if errW != nil || errH != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query: width, height"})
+		
+		publicID, err = db.GetValue("Rand")
+		if err != nil {
+			//c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query: width, height"})
+			filter = bson.D{{}}
+			cur, err := db.FindImagesByFilter(filter)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			ctx := context.Background()
+			if err = cur.All(ctx, &results); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			selected := results[rand.Intn(len(results))]
+
+			db.AddKeyValuePair("Rand", selected.PublicID, URLExpireTime)
+			publicID = selected.PublicID
+		}
+	} else {
+		aspect_ratio := float64(width) / float64(height)
+		// Check if redis has cache
+		interval := strconv.Itoa(int(math.Floor(aspect_ratio / IntervalSize)))
+		publicID, err = db.GetValue(interval)
+
+		if err != nil {
+			fmt.Println("cache miss")
+			filter = bson.D{
+				{Key: "$and", Value: bson.A{
+					bson.D{{Key: "aspect_ratio", Value: bson.D{{Key: "$gte", Value: aspect_ratio - Tolerance}}}},
+					bson.D{{Key: "aspect_ratio", Value: bson.D{{Key: "$lte", Value: aspect_ratio + Tolerance}}}},
+				},
+				},
+			}
+
+			cur, err := db.FindImagesByFilter(filter)
+			//fmt.Print(cur)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			ctx := context.Background()
+			if err = cur.All(ctx, &results); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			fmt.Print(len(results))
+			selected := results[rand.Intn(len(results))]
+			db.AddKeyValuePair(interval, selected.PublicID, URLExpireTime)
+			publicID = selected.PublicID
+		}
+	}
+
+	// Resize the Image to required size
+	t := cloudinary.Transform{
+		Width:  width,
+		Height: height,
+		Blur:   0,
+	}
+	//fmt.Println(publicID)
+	URL, err := cloudinary.GetTransformUrl(cld, publicID, &t)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloudinary Transform failed"})
 		return
 	}
-	aspect_ratio := float64(width) / float64(height)
-	// Check if redis has cache
-	binNum := strconv.Itoa(int(math.Floor(aspect_ratio / binWidth)))
-	url, err := db.GetValue(binNum)
-
-	if err != nil {
-		fmt.Println("cache miss")
-		filter := bson.D{
-			{Key: "$and", Value: bson.A{
-				bson.D{{Key: "aspect_ratio", Value: bson.D{{Key: "$gte", Value: aspect_ratio - Tolerance}}}},
-				bson.D{{Key: "aspect_ratio", Value: bson.D{{Key: "$lte", Value: aspect_ratio + Tolerance}}}},
-			},
-			},
-		}
-
-		cur, err := db.FindImagesByFilter(filter)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		var results []struct {
-			URL string
-		}
-		ctx := context.Background()
-		if err = cur.All(ctx, &results); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		selected := results[rand.Intn(len(results))]
-		db.AddKeyValuePair(binNum, selected.URL, URLExpireTime)
-		url = selected.URL
-	}
-	
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	//fmt.Println(URL)
+	c.Redirect(http.StatusTemporaryRedirect, URL)
 }
-
-
 func GetImages(c *gin.Context) {
 	page, errP := strconv.Atoi(c.Query("p"))
 	limit, errL := strconv.Atoi(c.Query("limit"))
@@ -110,7 +145,7 @@ func GetImages(c *gin.Context) {
 		return
 	}
 
-	results := make([]models.Image, 0);
+	results := make([]models.Image, 0)
 	ctx := context.Background()
 	err = cur.All(ctx, &results)
 	if err != nil {
@@ -122,7 +157,7 @@ func GetImages(c *gin.Context) {
 	return
 }
 
-func LikeImage(c *gin.Context) {
+func LikeImages(c *gin.Context) {
 	likes := new(dto.Likes)
 	if err := c.ShouldBindJSON(&likes); err != nil{
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

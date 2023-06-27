@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
-	"time"
+	// "time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -19,8 +19,7 @@ var (
 
 func init() {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+	ctx := context.Background()
 	var err error
 	client, err = mongo.Connect(ctx, options.Client().ApplyURI(db_url))
 	if err != nil {

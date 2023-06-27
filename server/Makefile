@@ -1,3 +1,4 @@
+all: create_db create_redis
 
 create_db:
 	@docker start mongo 2> /dev/null || docker run --name mongo\
@@ -14,5 +15,8 @@ remove_redis:
 	@docker stop redis 2> /dev/null || true
 
 clean: remove_db remove_redis
+
+
+
 
 .PHONY: create_db remove_db clean

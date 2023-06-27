@@ -12,5 +12,6 @@ module.exports = {
     "react-refresh/only-export-components": "warn",
     "@typescript-eslint/no-explicit-any": "off",
     "prefer-const": "off",
+    "no-unused-vars": "off"
   },
 };
