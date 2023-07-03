@@ -13,27 +13,7 @@ env:
   GKE_REGION: asia-east1
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        
-      - name: gcloud auth
-        id: auth
-        uses: google-github-actions/auth@v1
-        with: 
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-      
-      - name: get credentials
-        uses: google-github-actions/get-gke-credentials@v1
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_REGION }}
-
-  build-publish-deploy:
-    needs: setup
+  setup-build-publish-deploy:
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -76,6 +56,18 @@ jobs:
           file: ./server/Dockerfile
           push: true
           tags: israndomcat/randomcat-server
+
+      - name: gcloud auth
+        id: auth
+        uses: google-github-actions/auth@v1
+        with: 
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+      
+      - name: get credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_REGION }}
 
       - name: rollout update
         run: |
