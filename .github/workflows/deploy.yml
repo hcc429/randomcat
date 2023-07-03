@@ -2,7 +2,7 @@ name: Build and Deploy to GKE
 on:
   push:
     branches:
-      - 'main'
+      - 'cicd-test'
 
 env:
   PROJECT_ID : ${{secrets.GKE_PROJECT_ID}}
@@ -10,13 +10,30 @@ env:
   GKE_REGION: asia-east1
 
 jobs:
-  setup-build-publish-deploy:
+  setup:
     runs-on: ubuntu-latest
     environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       
+      - name: gcloud auth
+        id: auth
+        uses: google-github-actions/auth@v1
+        with: 
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+      
+      - name: get credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_REGION }}
+
+  build-publish-deploy:
+    needs: setup
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
       - name: change detecter
         id: changes
         uses: dorny/paths-filter@v2
@@ -26,9 +43,6 @@ jobs:
               - client/**
             server:
               - server/**
-            kubernetes:
-              - kubernetes/**
-          
 
       - name: login to docker
         uses: docker/login-action@v2
@@ -56,23 +70,6 @@ jobs:
           file: ./server/Dockerfile
           push: true
           tags: israndomcat/randomcat-server
-    
-      - name: gcloud auth
-        id: auth
-        uses: google-github-actions/auth@v1
-        with: 
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-      
-      - name: get credentials
-        uses: google-github-actions/get-gke-credentials@v1
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_REGION }}
-      
-      - name: apply kubernetes setting
-        if: steps.changes.outputs.kubernetes == 'true' 
-        run: |
-          kubectl apply -f kubernetes
 
       - name: rollout update
         if: steps.changes.outputs.server == 'true' || steps.changes.outputs.client == 'true'
@@ -80,3 +77,19 @@ jobs:
           kubectl rollout restart deploy server-deployment
           kubectl rollout restart deploy client-deployment
           
+  set-gke:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: change detecter
+        id: changes
+        uses: dorny/paths-filter@v2
+        with: 
+          filters: |
+            kubernetes:
+              - kubernetes/**
+      
+      - name: apply kubernetes setting
+        if: steps.changes.outputs.kubernetes == 'true' 
+        run: |
+          kubectl apply -f kubernetes
