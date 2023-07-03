@@ -1,8 +1,9 @@
 name: Build and Deploy to GKE
 on:
   push:
-    branches:
-      - 'cicd-test'
+    paths:
+      - 'client/**'
+      - 'server/**'
 
 env:
   PROJECT_ID : ${{secrets.GKE_PROJECT_ID}}
@@ -16,6 +17,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: login to docker
+        uses: docker/login-action@v2
+        with:
+          username: israndomcat
+          password: ${{ secrets.DOCKER_PASSWORD}}
+      
+      - name: setup docker buildx
+        uses: docker/setup-buildx-action@v2
       
       - name: gcloud auth
         id: auth
@@ -47,15 +57,6 @@ jobs:
             server:
               - server/**
 
-      - name: login to docker
-        uses: docker/login-action@v2
-        with:
-          username: israndomcat
-          password: ${{ secrets.DOCKER_PASSWORD}}
-      
-      - name: setup docker buildx
-        uses: docker/setup-buildx-action@v2
-      
       - name: build and push client
         if: steps.changes.outputs.client == 'true'
         uses: docker/build-push-action@v4
@@ -75,28 +76,6 @@ jobs:
           tags: israndomcat/randomcat-server
 
       - name: rollout update
-        if: steps.changes.outputs.server == 'true' || steps.changes.outputs.client == 'true'
         run: |
           kubectl rollout restart deploy server-deployment
           kubectl rollout restart deploy client-deployment
-          
-  set-gke:
-    needs: setup
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        
-      - name: change detecter
-        id: changes
-        uses: dorny/paths-filter@v2
-        with: 
-          filters: |
-            kubernetes:
-              - kubernetes/**
-      
-      - name: apply kubernetes setting
-        if: steps.changes.outputs.kubernetes == 'true' 
-        run: |
-          kubectl apply -f kubernetes
