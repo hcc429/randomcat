@@ -2,7 +2,7 @@ name: Change GKE Configurations
 on:
   push:
     branches:
-      - 'cicd-test'
+      - 'main'
     paths:
       - 'kubernetes/**'
 

@@ -2,7 +2,7 @@ name: Build and Deploy to GKE
 on:
   push:
     branches:
-      - 'cicd-test'
+      - 'main'
     paths:
       - 'client/**'
       - 'server/**'
