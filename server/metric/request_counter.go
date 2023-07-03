@@ -17,13 +17,10 @@ var (
 		})
 )
 
-func IncRequests(){
+func IncRequests() {
 	totalRequests.Add(1)
 }
 
-func IncSuccessfulRequests(){
+func IncSuccessfulRequests() {
 	successfulRequests.Add(1)
 }
-
-
-
