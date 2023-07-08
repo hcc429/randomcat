@@ -31,6 +31,5 @@ jobs:
           location: ${{ env.GKE_REGION }}
 
       - name: apply kubernetes setting
-        if: steps.changes.outputs.kubernetes == 'true' 
         run: |
           kubectl apply -f kubernetes
