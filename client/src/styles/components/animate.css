@@ -1,0 +1,54 @@
+
+
+
+@layer components{
+    .hero-bg{
+        animation: scaleBounce 1.5s;
+    }
+
+    @keyframes scaleBounce {
+        0%{
+            scale: 1.3;
+        }
+        50%{
+            scale: 0.95;
+        }
+        100%{
+            scale: 1;
+        }
+    }
+
+    .hero-animate-left-text{
+        animation: fadeInFromRight .8s;
+    }
+    .hero-animate-right-text{
+        animation: fadeInFromLeft .8s .2s backwards;
+    }
+    .hero-animate-center-text{
+        animation: fadeInFromBottom .8s .4s backwards;
+    }
+    @keyframes fadeInFromRight {
+        0%{
+            transform: translateX(100px);
+        }
+        100%{
+            transform: translateX(0);
+        }
+    }
+    @keyframes fadeInFromLeft {
+        0%{
+            transform: translateX(-100px);
+        }
+        100%{
+            transform: translateX(0);
+        }
+    }
+    @keyframes fadeInFromBottom{
+        0%{
+            transform: translateY(100px);
+        }
+        100%{
+            transform: translateY(0);
+        }
+    }
+}

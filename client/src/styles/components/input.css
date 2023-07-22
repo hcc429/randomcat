@@ -1,0 +1,26 @@
+@layer components {
+  .input-number {
+    text-align: center;
+    border-radius: 4px;
+    color: black;
+    padding: 0.75rem 1.25rem;
+    max-width: 12rem;
+    outline: none;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+    border: 3px solid transparent;
+    transition: all 0.2s;
+    &:focus {
+      border: 3px solid theme("colors.primary");
+    }
+  }
+  .invalid-input {
+    &,
+    &:focus {
+      border: 3px solid red;
+    }
+  }
+}

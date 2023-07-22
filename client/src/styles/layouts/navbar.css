@@ -1,0 +1,27 @@
+@layer components {
+  .rwd-navbar {
+    display: flex;
+    flex-direction: row;
+    transition: right 0.5s ease-in-out;
+    gap: theme("padding.8");
+    padding: theme("padding.4") theme("padding.8");
+    color: theme("colors.primary");
+    margin-left: 12rem;
+    margin-right: auto;
+    z-index: 9999;
+    background-color: theme("colors.white");
+    @media (max-width: theme("screens.lg")) {
+      border-left: 2px dashed theme("colors.primary");
+      flex-direction: column;
+      position: fixed;
+      right: -100%;
+      top: 10vh;
+      bottom: 0;
+      min-width: 70vw;
+      /* font-family: theme('fontFamily.handwriting'); */
+      &.active {
+        right: 0;
+      }
+    }
+  }
+}
